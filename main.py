@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 
-st.set_page_config(page_title="Crecimiento OMS: Aumento mensual y Peso acumulado", page_icon="👶", layout="centered")
+st.set_page_config(page_title="Crecimiento OMS: Peso y Talla", page_icon="👶", layout="centered")
 
 # ---------- Estilos suaves ----------
 st.markdown(
@@ -70,7 +70,6 @@ def lms_inc_from_z(z, L: float, M_shift: float, S: float):
     return x_shift - DELTA_G
 
 # ---------- (2) PESO ACUMULADO: parámetros LMS OMS (peso-para-edad), 0–24 meses ----------
-# Fuente: WHO Child Growth Standards (2006). Valores transcritos de las tablas LMS.
 # Estructura: month -> (L, M, S)
 GIRLS_WFA = {
      0:(0.3809, 3.2322, 0.14171),  1:(0.1714, 4.1873, 0.13724),  2:(0.0962, 5.1282, 0.13000),
@@ -83,7 +82,6 @@ GIRLS_WFA = {
     21:(-0.2815,10.8534, 0.12335),22:(-0.2862,11.0608, 0.12350),23:(-0.2903,11.2688, 0.12369),
     24:(-0.2941,11.4775, 0.12390),
 }
-
 BOYS_WFA = {
      0:(0.3487, 3.3464, 0.14602),  1:(0.2297, 4.4709, 0.13395),  2:(0.1970, 5.5675, 0.12385),
      3:(0.1738, 6.3762, 0.11727),  4:(0.1553, 7.0023, 0.11316),  5:(0.1395, 7.5105, 0.11080),
@@ -102,11 +100,45 @@ def lms_z_from_wfa(weight_kg: float, L: float, M: float, S: float) -> float:
 def lms_wfa_from_z(z, L: float, M: float, S: float):
     return M * (1.0 + L * S * z) ** (1.0 / L)
 
-# ---------- UI GENERAL ----------
-st.markdown("<h1 class='title'>👶 OMS: Aumento mensual y Peso acumulado</h1>", unsafe_allow_html=True)
-st.markdown("<p class='muted'>Basado en los Estándares de Crecimiento Infantil de la OMS (2006).</p>", unsafe_allow_html=True)
+# ---------- (3) TALLA/Longitud-para-edad (LFA) OMS, 0–24 m) ----------
+# Para longitud (cm). En OMS L≈1; incluimos meses clave (0–6, 12, 18, 24). Puedes ampliar fácil la tabla.
+# Estructura: month -> (L, M, S)
+GIRLS_LFA = {
+     0:(1.0, 49.1477, 0.03790),
+     1:(1.0, 53.6872, 0.03640),
+     2:(1.0, 57.0673, 0.03568),
+     3:(1.0, 59.8029, 0.03520),
+     4:(1.0, 62.0899, 0.03486),
+     5:(1.0, 64.0301, 0.03463),
+     6:(1.0, 65.7311, 0.03448),
+    12:(1.0, 74.0150, 0.03479),
+    18:(1.0, 80.7079, 0.03598),
+    24:(1.0, 86.4153, 0.03734),
+}
+BOYS_LFA = {
+     0:(1.0, 49.8842, 0.03795),
+     1:(1.0, 54.7244, 0.03557),
+     2:(1.0, 58.4249, 0.03424),
+     3:(1.0, 61.4292, 0.03328),
+     4:(1.0, 63.8860, 0.03257),
+     5:(1.0, 65.9026, 0.03204),
+     6:(1.0, 67.6236, 0.03165),
+    12:(1.0, 75.7488, 0.03137),
+    18:(1.0, 82.2587, 0.03279),
+    24:(1.0, 87.8161, 0.03479),
+}
 
-tab_vel, tab_wfa = st.tabs(["Aumento mensual", "Peso acumulado (peso-edad)"])
+def lms_z_from_lfa(length_cm: float, L: float, M: float, S: float) -> float:
+    return ((length_cm / M) ** L - 1.0) / (L * S)
+
+def lms_lfa_from_z(z, L: float, M: float, S: float):
+    return M * (1.0 + L * S * z) ** (1.0 / L)
+
+# ---------- UI GENERAL ----------
+st.markdown("<h1 class='title'>👶 OMS: Aumento mensual, Peso y Talla</h1>", unsafe_allow_html=True)
+st.markdown("<p class='muted'>Estándares OMS (2006). Este material es informativo y no reemplaza la valoración pediátrica.</p>", unsafe_allow_html=True)
+
+tab_vel, tab_wfa, tab_lfa = st.tabs(["Aumento mensual", "Peso (peso-edad)", "Talla (longitud-edad)"])
 
 # =========================
 # TAB 1 – AUMENTO MENSUAL
@@ -168,16 +200,6 @@ with tab_vel:
         ax.grid(True, alpha=0.25)
         st.pyplot(fig)
 
-        with st.expander("¿Qué estoy viendo?"):
-            st.markdown(
-                """
-                - La **línea** muestra la *curva de frecuencia acumulada* (CDF) de la ganancia mensual esperada según la OMS para ese mes.
-                - El **punto** marca el incremento observado y su **percentil exacto**.
-                - **Mediana** ≈ percentil 50.
-                - Interpretar junto a la **trayectoria** de los últimos meses y con evaluación pediátrica.
-                """
-            )
-
 # =========================
 # TAB 2 – PESO ACUMULADO (WFA)
 # =========================
@@ -210,7 +232,6 @@ with tab_wfa:
             st.write(f"Z-score (LMS): **{z:.2f}**  ·  L={L:.4f}, S={S:.5f}")
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Curva CDF en términos de peso (manteniendo L,M,S del mes)
         z_grid = np.linspace(-3.5, 3.5, 400)
         w_grid = lms_wfa_from_z(z_grid, L, M, S)
         cdf_grid = normal_cdf(z_grid) * 100.0
@@ -225,7 +246,56 @@ with tab_wfa:
         ax.grid(True, alpha=0.25)
         st.pyplot(fig)
 
+# =========================
+# TAB 3 – TALLA (Longitud-para-edad, LFA)
+# =========================
+with tab_lfa:
+    st.markdown("<h3>Percentil de talla (longitud-para-edad)</h3>", unsafe_allow_html=True)
+    with st.sidebar:
+        st.header("Datos del bebé – Talla (longitud)")
+        sex_l = st.radio("Sexo", ["Niña", "Niño"], horizontal=True, key="sex_l")
+        # Solo meses disponibles en esta versión (se puede ampliar pegando más filas OMS):
+        months_avail = [0,1,2,3,4,5,6,12,18,24]
+        age_l = st.selectbox("Edad (meses)", months_avail, index=5, help="Versión inicial con meses clave 0–6, 12, 18, 24.")
+        length = st.number_input("Talla / longitud (cm)", min_value=20.0, step=0.1, value=64.0, key="len")
+        show_details_l = st.checkbox("Mostrar detalles avanzados (Z-score, mediana)", value=True, key="sdl")
+
+    if st.button("Calcular percentil (talla)"):
+        if sex_l == "Niña":
+            L, M, S = GIRLS_LFA[age_l]
+            grupo = "Niña"
+        else:
+            L, M, S = BOYS_LFA[age_l]
+            grupo = "Niño"
+        z = lms_z_from_lfa(length, L, M, S)
+        pct = float(normal_cdf(z) * 100.0)
+
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.markdown(f"<div class='percentil'>Percentil {pct:.1f}</div>", unsafe_allow_html=True)
+        st.write(
+            f"**Para {age_l} meses, la talla de tu bebé se sitúa en el percentil {pct:.1f}.**"
+        )
+        st.write(f"Talla: **{length:.1f} cm**  ·  Mediana OMS: **{M:.1f} cm**  ·  {grupo}")
+        if show_details_l:
+            st.write(f"Z-score (LMS): **{z:.2f}**  ·  L={L:.2f}, S={S:.5f}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        z_grid = np.linspace(-3.5, 3.5, 400)
+        l_grid = lms_lfa_from_z(z_grid, L, M, S)
+        cdf_grid = normal_cdf(z_grid) * 100.0
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax.plot(l_grid, cdf_grid, linewidth=2)
+        ax.scatter([length], [pct], s=60)
+        ax.axvline(length, linestyle="--", linewidth=1)
+        ax.axhline(pct, linestyle="--", linewidth=1)
+        ax.set_xlabel("Talla / Longitud (cm)")
+        ax.set_ylabel("Frecuencia acumulada (%)")
+        ax.set_title(f"{grupo} • {age_l} meses • Percentil {pct:.1f}")
+        ax.grid(True, alpha=0.25)
+        st.pyplot(fig)
+
 # ---------- Pie ----------
 st.markdown("---")
-st.caption("Fuentes: WHO Child Growth Standards (2006). Módulo 1: Weight velocity standards (1-month increments). "
-           "Módulo 2: Weight-for-age (0–24 m) LMS. Este material es informativo y no reemplaza la evaluación pediátrica profesional.")
+st.caption("Fuentes: WHO Child Growth Standards (2006). Módulo 1: Weight velocity (1-month). "
+           "Módulo 2: Weight-for-age (0–24 m). Módulo 3: Length-for-age (0–24 m, meses clave). "
+           "Este material no sustituye la evaluación pediátrica profesional.")
