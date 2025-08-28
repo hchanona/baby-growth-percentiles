@@ -1,12 +1,3 @@
-Python 3.11.3 (tags/v3.11.3:f3909b8, Apr  4 2023, 23:49:59) [MSC v.1934 64 bit (AMD64)] on win32
-Type "help", "copyright", "credits" or "license()" for more information.
->>> # app.py
-... # Streamlit – OMS 2006: Percentil del incremento mensual de peso (1-month increments)
-... # Autor: tú + ChatGPT :)
-... # Cómo ejecutar:
-... #   pip install streamlit matplotlib numpy
-... #   streamlit run app.py
-... 
 ... import math
 ... import numpy as np
 ... import matplotlib.pyplot as plt
@@ -154,3 +145,4 @@ else:
 st.markdown("---")
 st.caption("Fuentes: WHO Child Growth Standards (2006), Weight velocity standards (1-month increments). "
            "Este material es informativo y no reemplaza la evaluación pediátrica profesional.")
+
