@@ -1,30 +1,37 @@
-... import math
-... import numpy as np
-... import matplotlib.pyplot as plt
-... import streamlit as st
-... 
-... st.set_page_config(page_title="Percentil del Aumento de Peso (OMS)", page_icon="👶", layout="centered")
-... 
-... # ---------- Estilos suaves ----------
-... st.markdown("""
-...     <style>
-...       .main {background-color: #fafafa;}
-...       .metric-card {padding: 18px 20px; border-radius: 16px; background: white; 
-...                     box-shadow: 0 2px 14px rgba(0,0,0,.06); border: 1px solid #eee;}
-...       .muted {color:#666; font-size:0.9rem;}
-...       .title {font-weight: 800; letter-spacing:.2px;}
-...       .percentil {font-size: 2.2rem; font-weight: 800;}
-...     </style>
-... """, unsafe_allow_html=True)
-... 
-... # ---------- Datos OMS (2006) ----------
-... DELTA_G = 400.0  # desplazamiento δ (g) definido por OMS para velocity
-... # Niñas: L constante por intervalo
-... GIRLS_L = 0.7781
-... GIRLS = {
-...     1:  (1279.4834, 0.21479),
-...     2:  (1411.1075, 0.19384),
-...     3:  (1118.0098, 0.19766),
+# app.py
+# Streamlit – OMS 2006: Percentil del incremento mensual de peso (1-month increments)
+# Autor: tú + ChatGPT :)
+# Cómo ejecutar:
+#   pip install streamlit matplotlib numpy
+#   streamlit run app.py
+
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+import streamlit as st
+
+st.set_page_config(page_title="Percentil del Aumento de Peso (OMS)", page_icon="👶", layout="centered")
+
+# ---------- Estilos suaves ----------
+st.markdown("""
+    <style>
+      .main {background-color: #fafafa;}
+      .metric-card {padding: 18px 20px; border-radius: 16px; background: white; 
+                    box-shadow: 0 2px 14px rgba(0,0,0,.06); border: 1px solid #eee;}
+      .muted {color:#666; font-size:0.9rem;}
+      .title {font-weight: 800; letter-spacing:.2px;}
+      .percentil {font-size: 2.2rem; font-weight: 800;}
+    </style>
+""", unsafe_allow_html=True)
+
+# ---------- Datos OMS (2006) ----------
+DELTA_G = 400.0  # desplazamiento δ (g) definido por OMS para velocity
+# Niñas: L constante por intervalo
+GIRLS_L = 0.7781
+GIRLS = {
+    1:  (1279.4834, 0.21479),
+    2:  (1411.1075, 0.19384),
+    3:  (1118.0098, 0.19766),
     4:  (984.8825,  0.20995),
     5:  (888.9803,  0.22671),
     6:  (801.3910,  0.24596),
@@ -145,4 +152,3 @@ else:
 st.markdown("---")
 st.caption("Fuentes: WHO Child Growth Standards (2006), Weight velocity standards (1-month increments). "
            "Este material es informativo y no reemplaza la evaluación pediátrica profesional.")
-
